@@ -5,7 +5,12 @@ import {clearTiles, animateExplored, clearExplored} from "../scripts/toggles.js"
 import {bfs} from "../scripts/bfs.js"
 import {astar} from "../scripts/astar.js"
 import {dijkstra} from "../scripts/dijkstra.js"
-const blockSize = 32
+import Swal from "sweetalert2/dist/sweetalert2.js"
+import image from "../assets/pfsample.png"
+import dragpoints from "../assets/dragpoints.png"
+const blockSize = 30
+
+const dragList = ref(null)
 
 const size = ref({
       rows: 0,
@@ -25,6 +30,11 @@ const selectedAlg = ref(algorithms.value[1])
 const tileClicked = (index) => {
       if (!Tiles.value[index].target) {
             Tiles.value[index].blocked = !Tiles.value[index].blocked
+      }
+}
+const tileBlocked = (index) => {
+      if (!Tiles.value[index].target) {
+            Tiles.value[index].blocked = true
       }
 }
 const initializeTiles = () => {
@@ -59,12 +69,29 @@ const initializeTiles = () => {
             })
       )
 }
+
 onMounted(() => {
       window.addEventListener("load", initializeTiles)
       window.addEventListener("resize", initializeTiles)
+
+      setTimeout(() => {
+            Swal.fire({
+                  title: "Hold left click to draw blocks",
+                  imageUrl: image,
+                  confirmButtonText: "Okay",
+            }).then(() => {
+                  Swal.fire({
+                        title: "Drag the starting and target tiles to move them freely.",
+                        imageUrl: dragpoints,
+                        confirmButtonText: "Cool",
+                  })
+            })
+      }, 500)
 })
 
 const handleFindPath = () => {
+      const target = Tiles.value.find((tile) => tile.target).id
+      Tiles.value[target].blocked = false
       let explored, path
       if (isAnimating.value) {
             return
@@ -104,6 +131,31 @@ const handleSelectAlgo = () => {
       isAnimating.value = false
       clearExplored(Tiles.value)
 }
+const handleMouseDown = () => {
+      const start = Tiles.value.find((tile) => tile.start).id
+      const target = Tiles.value.find((tile) => tile.target).id
+      if (dragList.value !== start && dragList.value !== target) {
+            isMouseDown.value = true
+      }
+}
+const handleMouseEnter = (index) => {
+      if (dragList.value !== null && Tiles.value[dragList.value].start) {
+            Tiles.value[dragList.value].start = false
+            Tiles.value[index].start = true
+            dragList.value = index
+      } else if (
+            dragList.value !== null &&
+            Tiles.value[dragList.value].target
+      ) {
+            Tiles.value[dragList.value].target = false
+            Tiles.value[index].target = true
+
+            dragList.value = index
+      }
+}
+const handleMouseUp = () => {
+      dragList.value = null
+}
 </script>
 
 <template>
@@ -130,7 +182,7 @@ const handleSelectAlgo = () => {
             </button>
       </div>
       <div
-            @mousedown.left="isMouseDown = true"
+            @mousedown.left="handleMouseDown"
             @mouseup.left="isMouseDown = false"
             @mouseleave="isMouseDown = false"
             class="grid"
@@ -138,9 +190,13 @@ const handleSelectAlgo = () => {
             <Tile
                   v-for="tile in Tiles"
                   v-bind:key="tile.id"
+                  @mousedown="dragList = tile.id"
+                  @mouseenter="handleMouseEnter(tile.id)"
+                  @mouseup="handleMouseUp"
                   :tileClicked="tileClicked"
                   :tile="tile"
-                  :isMouseDown="isMouseDown" />
+                  :isMouseDown="isMouseDown"
+                  :tileBlocked="tileBlocked" />
       </div>
 </template>
 
@@ -148,13 +204,13 @@ const handleSelectAlgo = () => {
 .nav {
       background: #27374d;
       color: white;
-      height: 14%;
+      height: 10%;
       display: flex;
       align-items: center;
       justify-content: start;
 }
 .grid {
-      height: 86%;
+      height: 90%;
       display: grid;
       grid-template-rows: repeat(var(--rows), 1fr);
       grid-template-columns: repeat(var(--columns), 1fr);

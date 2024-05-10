@@ -1,8 +1,12 @@
 <script setup>
-import {ref} from "vue"
+const props = defineProps(["tile", "tileClicked", "isMouseDown", "tileBlocked"])
 
-const props = defineProps(["tile", "tileClicked", "isMouseDown"])
-const isDragging = ref(false)
+const handleMouseEnter = () => {
+      if (props.isMouseDown) {
+            props.tileBlocked(props.tile.id)
+      }
+}
+// :draggable="props.tile.start ? 'true' : 'false'"
 </script>
 
 <template>
@@ -15,17 +19,8 @@ const isDragging = ref(false)
                   props.tile.start ? 'start' : '',
                   props.tile.target ? 'target' : '',
             ]"
-            :draggable="props.tile.start ? 'true' : 'false'"
-            @dragstart="isDragging = true"
             @click="props.tileClicked(props.tile.id)"
-            @mouseenter="
-                  props.isMouseDown &&
-                  !props.blocked &&
-                  !isDragging &&
-                  !props.tile.target
-                        ? (props.tile.blocked = true)
-                        : null
-            "></div>
+            @mouseover="handleMouseEnter"></div>
 </template>
 <style scoped>
 .tiles {

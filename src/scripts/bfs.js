@@ -8,6 +8,7 @@ export const bfs = (Tiles, size) => {
       let path = []
       let explored = new Set([start])
       let directions = directionsList(size.columns)
+      Tiles[end].blocked = false
       while (frontier.length > 0) {
             let currTile = frontier.shift()
             if (currTile === end) {
