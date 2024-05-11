@@ -38,6 +38,8 @@ const algorithms = ref([
 const selectedAlg = ref(algorithms.value[1])
 
 const tileClicked = (index) => {
+      isAnimating.value = false
+      clearExplored(Tiles.value)
       if (!Tiles.value[index].target) {
             Tiles.value[index].blocked = !Tiles.value[index].blocked
       }
@@ -107,12 +109,10 @@ const handleFindPath = () => {
             return
       }
       ;[explored, path] = selectedAlg.value.alg(Tiles.value, size.value)
-      animateExplored(Tiles.value, explored, path, isAnimating)
-      isPathFound.value = true
+      animateExplored(Tiles.value, explored, path, isAnimating, isPathFound)
 }
 const handleClearTiles = () => {
       isAnimating.value = false
-
       clearTiles(Tiles.value)
       isPathFound.value = false
 }
@@ -150,15 +150,22 @@ const handleMouseEnter = (index) => {
             Tiles.value[dragList.value].start &&
             !Tiles.value[index].target
       ) {
+            clearExplored(Tiles.value)
+
+            isAnimating.value = false
             Tiles.value[dragList.value].start = false
             Tiles.value[index].start = true
             dragList.value = index
+
             handleShowPath()
       } else if (
             dragList.value !== null &&
             Tiles.value[dragList.value].target &&
             !Tiles.value[index].start
       ) {
+            clearExplored(Tiles.value)
+
+            isAnimating.value = false
             Tiles.value[dragList.value].target = false
             Tiles.value[index].target = true
             dragList.value = index

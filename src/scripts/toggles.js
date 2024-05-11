@@ -18,12 +18,19 @@ export const showPath = (Tiles, path) => {
       path.forEach((p) => (Tiles[p].path = true))
 }
 
-export const animateExplored = (Tiles, explored, path, isAnimating) => {
+export const animateExplored = (
+      Tiles,
+      explored,
+      path,
+      isAnimating,
+      isPathFound
+) => {
       let index = 0
       let delay = 1
       length = explored.length
       clearExplored(Tiles)
       isAnimating.value = true
+      isPathFound.value = false
 
       function aniExplored() {
             if (index < length && isAnimating.value) {
@@ -38,6 +45,9 @@ export const animateExplored = (Tiles, explored, path, isAnimating) => {
       }
 
       function aniPath() {
+            if (index == path.length - 1) {
+                  isPathFound.value = true
+            }
             if (index < path.length && isAnimating.value) {
                   Tiles[path[index]].path = true
                   index++
