@@ -1,7 +1,12 @@
 <script setup>
 import {ref, onMounted} from "vue"
 import Tile from "./Tile.vue"
-import {clearTiles, animateExplored, clearExplored} from "../scripts/toggles.js"
+import {
+      clearTiles,
+      animateExplored,
+      clearExplored,
+      showPath,
+} from "../scripts/toggles.js"
 import {bfs} from "../scripts/bfs.js"
 import {astar} from "../scripts/astar.js"
 import {dijkstra} from "../scripts/dijkstra.js"
@@ -18,12 +23,17 @@ const size = ref({
 })
 const isAnimating = ref(false)
 const isMouseDown = ref(false)
+const isPathFound = ref(false)
 const GridRef = ref()
 const Tiles = ref([])
 const algorithms = ref([
-      {id: 0, label: "Breadth First Search"},
-      {id: 1, label: "A* Algorithm"},
-      {id: 2, label: "Dijstra's Algorithm"},
+      {
+            id: 0,
+            label: "Breadth First Search",
+            alg: bfs,
+      },
+      {id: 1, label: "A* Algorithm", alg: astar},
+      {id: 2, label: "Dijstra's Algorithm", alg: dijkstra},
 ])
 const selectedAlg = ref(algorithms.value[1])
 
@@ -32,7 +42,7 @@ const tileClicked = (index) => {
             Tiles.value[index].blocked = !Tiles.value[index].blocked
       }
 }
-const tileBlocked = (index) => {
+const blockTile = (index) => {
       if (!Tiles.value[index].target) {
             Tiles.value[index].blocked = true
       }
@@ -96,27 +106,18 @@ const handleFindPath = () => {
       if (isAnimating.value) {
             return
       }
-      switch (selectedAlg.value.id) {
-            case 0:
-                  ;[explored, path] = bfs(Tiles.value, size.value)
-                  animateExplored(Tiles.value, explored, path, isAnimating)
-                  break
-            case 1:
-                  ;[explored, path] = astar(Tiles.value, size.value)
-                  animateExplored(Tiles.value, explored, path, isAnimating)
-                  break
-            case 2:
-                  ;[explored, path] = dijkstra(Tiles.value, size.value)
-                  animateExplored(Tiles.value, explored, path, isAnimating)
-                  break
-      }
+      ;[explored, path] = selectedAlg.value.alg(Tiles.value, size.value)
+      animateExplored(Tiles.value, explored, path, isAnimating)
+      isPathFound.value = true
 }
 const handleClearTiles = () => {
       isAnimating.value = false
-      console.log("isanimating in handlecleartiles", isAnimating.value)
+
       clearTiles(Tiles.value)
+      isPathFound.value = false
 }
 const handleRandomBlocks = () => {
+      isPathFound.value = false
       isAnimating.value = false
       clearExplored(Tiles.value)
       const array = []
@@ -139,18 +140,36 @@ const handleMouseDown = () => {
       }
 }
 const handleMouseEnter = (index) => {
-      if (dragList.value !== null && Tiles.value[dragList.value].start) {
+      if (isMouseDown.value) {
+            blockTile(index)
+            isAnimating.value = false
+            clearExplored(Tiles.value)
+      }
+      if (
+            dragList.value !== null &&
+            Tiles.value[dragList.value].start &&
+            !Tiles.value[index].target
+      ) {
             Tiles.value[dragList.value].start = false
             Tiles.value[index].start = true
             dragList.value = index
+            handleShowPath()
       } else if (
             dragList.value !== null &&
-            Tiles.value[dragList.value].target
+            Tiles.value[dragList.value].target &&
+            !Tiles.value[index].start
       ) {
             Tiles.value[dragList.value].target = false
             Tiles.value[index].target = true
-
             dragList.value = index
+            handleShowPath()
+      }
+}
+
+const handleShowPath = () => {
+      if (isPathFound.value) {
+            const [_, path] = selectedAlg.value.alg(Tiles.value, size.value)
+            showPath(Tiles.value, path)
       }
 }
 const handleMouseUp = () => {
@@ -193,10 +212,9 @@ const handleMouseUp = () => {
                   @mousedown="dragList = tile.id"
                   @mouseenter="handleMouseEnter(tile.id)"
                   @mouseup="handleMouseUp"
-                  :tileClicked="tileClicked"
+                  @click="tileClicked(tile.id)"
                   :tile="tile"
-                  :isMouseDown="isMouseDown"
-                  :tileBlocked="tileBlocked" />
+                  :isPathFound="isPathFound" />
       </div>
 </template>
 

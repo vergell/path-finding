@@ -1,12 +1,5 @@
 <script setup>
-const props = defineProps(["tile", "tileClicked", "isMouseDown", "tileBlocked"])
-
-const handleMouseEnter = () => {
-      if (props.isMouseDown) {
-            props.tileBlocked(props.tile.id)
-      }
-}
-// :draggable="props.tile.start ? 'true' : 'false'"
+const props = defineProps(["tile", "isPathFound"])
 </script>
 
 <template>
@@ -18,9 +11,8 @@ const handleMouseEnter = () => {
                   props.tile.path ? 'path' : '',
                   props.tile.start ? 'start' : '',
                   props.tile.target ? 'target' : '',
-            ]"
-            @click="props.tileClicked(props.tile.id)"
-            @mouseover="handleMouseEnter"></div>
+                  props.isPathFound ? 'animationNone' : '',
+            ]"></div>
 </template>
 <style scoped>
 .tiles {
@@ -65,6 +57,9 @@ const handleMouseEnter = () => {
       animation-name: none;
 
       background: #ff004d;
+}
+.animationNone {
+      animation-name: none;
 }
 @keyframes breathing {
       0% {

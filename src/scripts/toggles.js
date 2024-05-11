@@ -13,6 +13,11 @@ export const clearExplored = (Tiles) => {
       })
 }
 
+export const showPath = (Tiles, path) => {
+      clearExplored(Tiles)
+      path.forEach((p) => (Tiles[p].path = true))
+}
+
 export const animateExplored = (Tiles, explored, path, isAnimating) => {
       let index = 0
       let delay = 1
